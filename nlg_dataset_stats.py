@@ -15,7 +15,7 @@ from tgen.delex import delex_sent
 
 def split_tags(text):
     """Return list of word, tag tuples"""
-    return [[tok.split('/') if tok != '//:' else ('/', ':') for tok in sent.split(' ')]
+    return [[tok.split('/') if tok != '////:' else ('/', '/', ':') for tok in sent.split(' ')]
             for sent in text.split("\t")]
 
 
@@ -62,7 +62,7 @@ def ngram_stats(refs, n):
     return ngrams, uniq_ngrams
 
 
-def delexicalize_refs(mrs, refs, delex_slots):
+def delexicalize_refs(mrs, refs, delex_slots, delex_output_file):
     delex_refs = []
     print('Delexicalizing...', end=' ', file=sys.stderr)
     for pos, (mr, ref) in enumerate(zip(mrs, refs)):
@@ -78,16 +78,25 @@ def delexicalize_refs(mrs, refs, delex_slots):
                 if abst.start == -1:  # skip delex instances not actually occurring in this sentence
                     continue
                 delex_tagged.extend(sent[off + shift:abst.start + shift])
-                delex_tagged.append([delex[abst.start], sent[abst.start + shift][1]])
+                # POS tag for all delex'd slots is usually NNP, except for phone numbers and counts
+                delex_pos = {'count': 'CD', 'phone': 'CD'}.get(abst.slot, 'NNP')
+                delex_tagged.append([delex[abst.start], delex[abst.start], delex_pos])
                 off = abst.end
                 shift += abst.surface_form.count(' ')
             delex_tagged.extend(sent[off + shift:])
             delex_ref.append(delex_tagged)
         delex_refs.append(delex_ref)
+
+    with codecs.open(delex_output_file + '.delex.txt', 'w', 'UTF-8') as fh:
+        fh.write('\n'.join([' '.join([tok[0] for sent in ref for tok in sent]) for ref in delex_refs]))
+
+    with codecs.open(delex_output_file + '.delex.tag.lca.txt', 'w', 'UTF-8') as fh:
+        fh.write('\n'.join([' '.join(['_'.join(tok[1:]) for tok in sent]) for ref in delex_refs for sent in ref]))
+
     return delex_refs
 
 
-def data_stats(mrs, refs, delex_slots):
+def data_stats(mrs, refs, delex_slots, delex_output_file):
     assert len(refs) == len(mrs)
     print('Insts:', len(refs))
     print('MRs:', len(set(mrs)))
@@ -109,16 +118,17 @@ def data_stats(mrs, refs, delex_slots):
     print('MR mean len: %.2f' % np.mean([len(mr) for mr in set(mrs)]))
 
     lex_refs = refs
-    delex_refs = delexicalize_refs(mrs, refs, delex_slots)
+    delex_refs = delexicalize_refs(mrs, refs, delex_slots, delex_output_file)
+
     for refs_type, refs in [('Lex', lex_refs), ('Delex', delex_refs)]:
         print('Stats for %s refs:\n--------------------' % refs_type)
         print('Ref mean len: %.2f' % np.mean([len([tok for sent in ref for tok in sent]) for ref in refs]))
         print('Ref mean words: %.2f' % np.mean([len([tok for sent in ref for tok in sent
-                                                   if tok[1] not in ['.', ':', '(', ')', ',']]) for ref in refs]))
+                                                   if tok[-1] not in ['.', ':', '(', ')', ',']]) for ref in refs]))
         print('Ref mean sentence len: %.2f' %
               np.mean([len(sent) for ref in refs for sent in ref]))
         print('Ref mean sentence words: %.2f' %
-              np.mean([len([tok for tok in sent if tok[1] not in ['.', ':', '(', ')', ',']])
+              np.mean([len([tok for tok in sent if tok[-1] not in ['.', ':', '(', ')', ',']])
                        for ref in refs for sent in ref]))
         sent_nums = [len(ref) for ref in refs]
         print('Ref sentences min: %d  max: %d  mean: %.2f' %
@@ -146,16 +156,22 @@ def data_stats(mrs, refs, delex_slots):
 if __name__ == '__main__':
     print('\nE2E stats:\n=========')
     mrs, refs = read_e2e_data()
-    data_stats(mrs, refs, {'name': [], 'near': []})
+    data_stats(mrs, refs, {'name': [], 'near': []},
+               'data/e2e-refs')
 
     print('\nSFREST stats:\n=========')
     mrs, refs = read_sfx_data()
-    data_stats(mrs, refs, {'name': [], 'near': [], 'phone': [], 'address': [], 'postcode': [], 'count': [], 'area': []})
+    data_stats(mrs, refs, {'name': [], 'near': [], 'phone': [], 'address': [], 'postcode': [], 'count': [], 'area': []},
+               'data/sfrest-refs')
 
     print('\nSFREST-inform stats:\n=========')
     mrs, refs = filter_inform(mrs, refs)
-    data_stats(mrs, refs, {'name': [], 'near': [], 'phone': [], 'address': [], 'postcode': [], 'count': [], 'area': []})
+    data_stats(mrs, refs,
+               {'name': [], 'near': [], 'phone': [], 'address': [], 'postcode': [], 'count': [], 'area': []},
+               'data/sfrest_inform-refs')
 
     print('\nBAGEL stats:\n=========')
     mrs, refs = read_bagel_data()
-    data_stats(mrs, refs, {'name': [], 'near': [], 'addr': [], 'phone': [], 'postcode': [], 'area': ['riverside', 'citycentre']})
+    data_stats(mrs, refs,
+               {'name': [], 'near': [], 'addr': [], 'phone': [], 'postcode': [], 'area': ['riverside', 'citycentre']},
+               'data/bagel-refs')

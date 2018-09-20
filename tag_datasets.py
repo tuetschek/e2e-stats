@@ -46,12 +46,14 @@ def tag(tagger_model, in_file, out_file, output_format):
                   for line in data]
         tagged = '"x"\n"' + "\n".join(['"' + line.replace('"', '""') + '"' for line in tagged])
 
+    # word/lemma/tag (for the stats script)
     elif output_format == 'ngram':
-        tagged = ["\t".join([" ".join(['%s/%s' % (word.lower(), tag) for word, _, tag in sent])
+        tagged = ["\t".join([" ".join(['%s/%s/%s' % (word.lower(), lemma, tag) for word, lemma, tag in sent])
                             for sent in tagger.tag(line)])
                   for line in data]
         tagged = "\n".join(tagged)
-    #
+
+    # TODO
     elif output_format == 'collins':
         pass
 
