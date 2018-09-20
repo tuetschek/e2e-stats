@@ -39,15 +39,18 @@ def tag(tagger_model, in_file, out_file, output_format):
                   for line in data]
         tagged = "\n".join(tagged)
     # lowercase word/tag, one instance per line
-    elif output_format == 'R' or output_format == 'ngram':
+    elif output_format == 'R':
         tagged = [" ".join(['%s/%s' % (word.lower(), tag)
                             for sent in tagger.tag(line)
                             for word, _, tag in sent])
                   for line in data]
-        if output_format == 'R':  # faking a CSV
-            tagged = '"x"\n"' + "\n".join(['"' + line.replace('"', '""') + '"' for line in tagged])
-        else:  # plain text
-            tagged = "\n".join(tagged)
+        tagged = '"x"\n"' + "\n".join(['"' + line.replace('"', '""') + '"' for line in tagged])
+
+    elif output_format == 'ngram':
+        tagged = ["\t".join([" ".join(['%s/%s' % (word.lower(), tag) for word, _, tag in sent])
+                            for sent in tagger.tag(line)])
+                  for line in data]
+        tagged = "\n".join(tagged)
     #
     elif output_format == 'collins':
         pass
