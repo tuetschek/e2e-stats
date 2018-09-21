@@ -11,6 +11,7 @@ import math
 import codecs
 from tgen.data import DA
 from tgen.delex import delex_sent
+from tag_datasets import write_output
 
 
 def split_tags(text):
@@ -41,6 +42,10 @@ def filter_inform(mrs, refs):
         if any([dai.da_type.startswith('inform') for dai in mr]):
             filt_mrs.append(mr)
             filt_refs.append(ref)
+    write_output(filt_refs, 'ngram', 'data/bagel_inform-refs.tag.ngram.txt')
+    write_output(filt_refs, 'lca', 'data/bagel_inform-refs.tag.lca.txt')
+    write_output(filt_refs, 'collins', 'data/bagel_inform-refs.tag.collins.txt')
+
     return filt_mrs, filt_refs
 
 
@@ -90,8 +95,8 @@ def delexicalize_refs(mrs, refs, delex_slots, delex_output_file):
     with codecs.open(delex_output_file + '.delex.txt', 'w', 'UTF-8') as fh:
         fh.write('\n'.join([' '.join([tok[0] for sent in ref for tok in sent]) for ref in delex_refs]))
 
-    with codecs.open(delex_output_file + '.delex.tag.lca.txt', 'w', 'UTF-8') as fh:
-        fh.write('\n'.join([' '.join(['_'.join(tok[1:]) for tok in sent]) for ref in delex_refs for sent in ref]))
+    write_output(delex_refs, 'lca', delex_output_file + '.delex.tag.lca.txt')
+    write_output(delex_refs, 'collins', delex_output_file + '.delex.tag.collins.txt')
 
     return delex_refs
 
