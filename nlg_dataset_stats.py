@@ -31,7 +31,7 @@ def read_sfx_data():
     with codecs.open('data/sfrest-refs.tag.ngram.txt', 'r', 'UTF-8') as fh:
         refs = [split_tags(inst.strip()) for inst in fh.readlines()]
     with codecs.open('data/sfrest-mrs.txt', 'r', 'UTF-8') as fh:
-        mrs = [DA.parse(mr) for mr in fh.readlines()]
+        mrs = [DA.parse(mr.strip()) for mr in fh.readlines()]
     return mrs, refs
 
 
