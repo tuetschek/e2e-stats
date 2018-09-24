@@ -42,9 +42,9 @@ def filter_inform(mrs, refs):
         if any([dai.da_type.startswith('inform') for dai in mr]):
             filt_mrs.append(mr)
             filt_refs.append(ref)
-    write_output(filt_refs, 'ngram', 'data/bagel_inform-refs.tag.ngram.txt')
-    write_output(filt_refs, 'lca', 'data/bagel_inform-refs.tag.lca.txt')
-    write_output(filt_refs, 'collins', 'data/bagel_inform-refs.tag.collins.txt')
+    write_output(filt_refs, 'ngram', 'data/sfrest_inform-refs.tag.ngram.txt')
+    write_output(filt_refs, 'lca', 'data/sfrest_inform-refs.tag.lca.txt')
+    write_output(filt_refs, 'collins', 'data/sfrest_inform-refs.tag.collins.txt')
 
     return filt_mrs, filt_refs
 

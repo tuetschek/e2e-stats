@@ -31,7 +31,7 @@ class MorphoTagger(object):
         return out_buf
 
 
-def tag(tagger_model, in_file, out_file, output_format):
+def tag(tagger_model, in_file):
     with open(in_file, encoding='UTF-8') as fh:
         data = [l.strip() for l in fh.readlines()]
     tagger = MorphoTagger(tagger_model)
