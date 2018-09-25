@@ -13,24 +13,26 @@ mkdir data-tmp data
 
 cd data-tmp
 
-# SFX
+# SF Rest
 wget 'https://www.repository.cam.ac.uk/bitstream/handle/1810/251304/data.zip?sequence=1&isAllowed=y' -O data.zip
 unzip data.zip
-tail +6 dat/sfxrestaurant/train+valid+test.json > sfxrest.json
+tail +6 dat/sfxrestaurant/train+valid+test.json > sfrest.json
 rm -r dat data.zip
-../tgen/sfx-restaurant/input/convert.py 
+../tgen/sfx-restaurant/input/convert.py -m -n -i sfrest.json sfrest
 
 cp sfrest-das.txt ../data/sfrest-mrs.txt
 cat sfrest-text.txt | sed 's/\(^\|\. \)\(.\)/\1\u\2/g;s/ \(['"'"'?!.,;]\)/\1/g;s/\([Cc]\)hild -s/\1hildren/g;s/ -s/s/g;s/ -ly/ly/g' > ../data/sfrest-refs.txt
 rm *
 
 # BAGEL
-# TODO
-
+wget "http://farm2.user.srcf.net/research/bagel/ACL10-inform-training.txt"
+../convert_bagel.py ACL10-inform-training.txt ../data/bagel-mrs.txt ../data/bagel-refs.txt
+rm *
 
 # E2E 
-# TODO
-
+wget "https://github.com/tuetschek/e2e-dataset/archive/master.zip"
+../convert_e2e.py e2e-dataset-master/{trainset,devset,testset_w_refs}.csv ../data/e2e-mrs.txt ../data/e2e-refs.txt
+rm *
 
 rmdir data-tmp
 
