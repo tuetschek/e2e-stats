@@ -1,13 +1,17 @@
 #!/bin/bash
 
-# install python libraries
+#
+# 1. install python libraries
+#
 
 pip2 install --user pandas ufal.morphodita
 git clone https://github.com/UFAL-DSG/tgen
 cd tgen
 pip install --user -e .
 
-# get datasets
+#
+# 2. download the datasets
+#
 
 mkdir data-tmp data
 
@@ -36,7 +40,9 @@ rm *
 
 rmdir data-tmp
 
-# get tools
+#
+# 3. install the tools (note the patching!)
+#
 
 # lca
 mkdir lca
@@ -60,12 +66,13 @@ tar xf PARSER.tar.gz
 rm PARSER.tar.gz
 cd ..
 
+#
+# 4. obtain the stats
+#
 
-# run the stats
+# tag everything
 
-# tag stuff
-
-# run basic stats
+# run basic stats (+delexicalize)
 
 # run LCA
 
