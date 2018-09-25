@@ -1,0 +1,10 @@
+838,839c838,843
+< directoryPath=sys.argv[1]
+< for filename in glob.glob( os.path.join(directoryPath, '*.m2') ):
+---
+> 
+> files = sys.argv[1:]
+> if len(files) == 1 and os.path.isdir(files[0]):
+>     files = glob.glob(os.path.join(args[0], '*'))
+> 
+> for filename in files:

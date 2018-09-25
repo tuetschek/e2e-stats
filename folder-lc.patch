@@ -1,0 +1,14 @@
+100c100,102
+< directoryPath=sys.argv[1]
+---
+> files = sys.argv[1:]
+> if len(files) == 1 and os.path.isdir(files[0]):
+>     files = glob.glob(os.path.join(args[0], '*'))
+104c106
+< for filename in glob.glob( os.path.join(directoryPath, '*') ):
+---
+> for filename in files:
+238c240
+<             measure="%.2f" % measure
+---
+>             measure="%.4f" % measure
