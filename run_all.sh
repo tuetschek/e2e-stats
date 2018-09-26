@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e  # exit on error
+
 #
 # 1. install python libraries
 #
@@ -36,8 +38,9 @@ rm *
 
 # E2E
 wget "https://github.com/tuetschek/e2e-dataset/archive/master.zip"
+unzip master.zip
 ../convert_e2e.py e2e-dataset-master/{trainset,devset,testset_w_refs}.csv ../data/e2e-mrs.txt ../data/e2e-refs.txt
-rm *
+rm -r *
 
 rmdir data-tmp
 
@@ -59,7 +62,7 @@ mkdir dlevel
 cd dlevel
 wget "http://www.personal.psu.edu/xxl13/downloads/d-level-analyzer-2013-03-22.tgz"
 tar xf d-level-analyzer-2013-03-22.tgz
-mv d-level-analyzer-2013-03-22/d-level-directory.py NOMLEX-2001.reg .
+mv d-level-analyzer-2013-03-22/{d-level-directory.py,NOMLEX-2001.reg} .
 rm -r d-level-analyzer-2013-03-22 d-level-analyzer-2013-03-22.tgz
 patch d-level-directory.py ../d-level-directory.patch
 wget "http://people.csail.mit.edu/mcollins/PARSER.tar.gz"
@@ -68,6 +71,13 @@ cd COLLINS-PARSER/code
 make
 cd ../..
 rm PARSER.tar.gz
+cd ..
+
+# tagger model
+mkdir morphodita
+cd morphodita
+wget "https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11858/00-097C-0000-0023-68D9-0/english-morphium-wsj-140407.zip"
+unzip english-morphium-wsj-140407.zip
 cd ..
 
 #
