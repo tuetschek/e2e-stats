@@ -127,6 +127,7 @@ def data_stats(mrs, refs, delex_slots, delex_output_file):
 
     for refs_type, refs in [('Lex', lex_refs), ('Delex', delex_refs)]:
         print('Stats for %s refs:\n--------------------' % refs_type)
+        print('Total tokens: %d' % sum([len([tok for sent in ref for tok in sent]) for ref in refs]))
         print('Ref mean len: %.2f' % np.mean([len([tok for sent in ref for tok in sent]) for ref in refs]))
         print('Ref mean words: %.2f' % np.mean([len([tok for sent in ref for tok in sent
                                                    if tok[-1] not in ['.', ':', '(', ')', ',']]) for ref in refs]))
