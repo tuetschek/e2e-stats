@@ -123,4 +123,6 @@ done
 cd ..
 
 # run d-level analysis
+cd dlevel
 python2 d-level-directory.py ../data/*.parse.txt > ../stats-dlevel.csv
+cd ..
