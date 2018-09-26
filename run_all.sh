@@ -9,7 +9,7 @@ set -e  # exit on error
 pip2 install --user pandas ufal.morphodita
 git clone https://github.com/UFAL-DSG/tgen
 cd tgen
-pip install --user -e .
+pip2 install --user -e .
 cd ..
 
 #
