@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 
 from ufal.morphodita import Tagger, Forms, TaggedLemmas, TokenRanges
 import os.path
