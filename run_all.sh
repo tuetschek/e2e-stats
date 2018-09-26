@@ -42,6 +42,7 @@ unzip master.zip
 ../convert_e2e.py e2e-dataset-master/{trainset,devset,testset_w_refs}.csv ../data/e2e-mrs.txt ../data/e2e-refs.txt
 rm -r *
 
+cd ..
 rmdir data-tmp
 
 #
