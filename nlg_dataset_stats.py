@@ -101,13 +101,38 @@ def delexicalize_refs(mrs, refs, delex_slots, delex_output_file):
     return delex_refs
 
 
+def entropy(ngrams):
+    """Shannon entropy"""
+    total_freq = sum(ngrams.values())
+    return - sum([float(freq)/total_freq * math.log(float(freq)/total_freq, 2) for freq in ngrams.values()])
+
+
 def data_stats(mrs, refs, delex_slots, delex_output_file):
+
+    stats = {}
+    def sprnt(*args):
+        """Print out and store the statistic."""
+        print(*args)
+        text = ' '.join([unicode(arg) for arg in args])
+        if "\n" in text:
+            common_header, rest = text.split("\n", 1)
+            common_header = common_header.strip(':')
+            data = [["%s-%02d" % (common_header, num), it.strip()]  for num, it in enumerate(text.split("\n"), start=1)]
+        elif '  ' in text:
+            data = [it.split(':', 1) for it in text.split('  ')]
+            common_header = re.sub(' [^ ]*$', '', data[0][0])
+            data = [data[0]] + [[common_header + ' ' + it[0], it[1]] for it in data[1:]]
+        else:
+            data = [text.split(':', 1)]
+        for it_key, it_val in data:
+            stats[it_key] = it_val.strip()
+
     assert len(refs) == len(mrs)
-    print('Insts:', len(refs))
-    print('MRs:', len(set(mrs)))
+    sprnt('Insts:', len(refs))
+    sprnt('Lex MRs:', len(set(mrs)))
 
     delex_mrs = [da.get_delexicalized(delex_slots) for da in mrs]
-    print('Delex MRs:', len(set(delex_mrs)))
+    sprnt('Delex MRs:', len(set(delex_mrs)))
 
     mr_to_refs = {}
     for mr, ref in zip(mrs, refs):
@@ -115,47 +140,51 @@ def data_stats(mrs, refs, delex_slots, delex_output_file):
         if ref not in refs_for_mr:
             refs_for_mr.append(ref)
         mr_to_refs[mr] = refs_for_mr
-    print('Refs/MR min: %d' % min([len(refs_) for refs_ in mr_to_refs.values()]),
+    sprnt('Refs/MR min: %d' % min([len(refs_) for refs_ in mr_to_refs.values()]),
           ' max: %d' % max([len(refs_) for refs_ in mr_to_refs.values()]),
           ' mean: %.2f' % np.mean([len(refs_) for refs_ in mr_to_refs.values()]))
 
     # TODO MR len should discount empty slots (eg. "goodbye()")
-    print('MR mean len: %.2f' % np.mean([len(mr) for mr in set(mrs)]))
+    sprnt('MR mean len: %.2f' % np.mean([len(mr) for mr in set(mrs)]))
 
     lex_refs = refs
     delex_refs = delexicalize_refs(mrs, refs, delex_slots, delex_output_file)
 
-    for refs_type, refs in [('Lex', lex_refs), ('Delex', delex_refs)]:
-        print('Stats for %s refs:\n--------------------' % refs_type)
-        print('Total tokens: %d' % sum([len([tok for sent in ref for tok in sent]) for ref in refs]))
-        print('Ref mean len: %.2f' % np.mean([len([tok for sent in ref for tok in sent]) for ref in refs]))
-        print('Ref mean words: %.2f' % np.mean([len([tok for sent in ref for tok in sent
+    for refs_type, refs in [('Lex ', lex_refs), ('Delex ', delex_refs)]:
+        sprnt(refs_type + 'Total tokens: %d' % sum([len([tok for sent in ref for tok in sent]) for ref in refs]))
+        sprnt(refs_type + 'Ref mean len: %.2f' % np.mean([len([tok for sent in ref for tok in sent]) for ref in refs]))
+        sprnt(refs_type + 'Ref mean words: %.2f' % np.mean([len([tok for sent in ref for tok in sent
                                                    if tok[-1] not in ['.', ':', '(', ')', ',']]) for ref in refs]))
-        print('Ref mean sentence len: %.2f' %
+        sprnt(refs_type + 'Ref mean sentence len: %.2f' %
               np.mean([len(sent) for ref in refs for sent in ref]))
-        print('Ref mean sentence words: %.2f' %
+        sprnt(refs_type + 'Ref mean sentence words: %.2f' %
               np.mean([len([tok for tok in sent if tok[-1] not in ['.', ':', '(', ')', ',']])
                        for ref in refs for sent in ref]))
         sent_nums = [len(ref) for ref in refs]
-        print('Ref sentences min: %d  max: %d  mean: %.2f' %
+        sprnt(refs_type + 'Ref sentences min: %d  max: %d  mean: %.2f' %
               (np.mean(sent_nums), np.max(sent_nums), np.mean(sent_nums)))
 
         # ngram stats
         unigrams, uniq_unigrams = ngram_stats(refs, 1)
-        print('Uniq unigrams: %d / %d = %.2f' % (uniq_unigrams, len(unigrams), uniq_unigrams / float(len(unigrams))))
-        print('Top unigrams:\n' +
+        sprnt(refs_type + 'Uniq unigrams: %d / %d = %.2f' % (uniq_unigrams, len(unigrams), uniq_unigrams / float(len(unigrams))))
+        sprnt(refs_type + 'Top unigrams:\n' +
               '\n'.join(['  %-15s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(unigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
+        sprnt(refs_type + 'unigram entropy: %.4f' % entropy(unigrams))
         bigrams, uniq_bigrams = ngram_stats(refs, 2)
-        print('Uniq bigrams: %d / %d = %.2f' % (uniq_bigrams, len(bigrams), uniq_bigrams / float(len(bigrams))))
-        print('Top bigrams:\n' +
+        sprnt(refs_type + 'Uniq bigrams: %d / %d = %.2f' % (uniq_bigrams, len(bigrams), uniq_bigrams / float(len(bigrams))))
+        sprnt(refs_type + 'Top bigrams:\n' +
               '\n'.join(['  %-20s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(bigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
+        sprnt(refs_type + 'bigram entropy: %.4f' % entropy(bigrams))
         trigrams, uniq_trigrams = ngram_stats(refs, 3)
-        print('Uniq trigrams: %d / %d = %.2f' % (uniq_trigrams, len(trigrams), uniq_trigrams / float(len(trigrams))))
-        print('Top trigrams:\n' +
+        sprnt(refs_type + 'Uniq trigrams: %d / %d = %.2f' % (uniq_trigrams, len(trigrams), uniq_trigrams / float(len(trigrams))))
+        sprnt(refs_type + 'Top trigrams:\n' +
               '\n'.join(['  %-25s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(trigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
+        sprnt(refs_type + 'trigram entropy: %.4f' % entropy(trigrams))
+
+    return stats
 
 
 
