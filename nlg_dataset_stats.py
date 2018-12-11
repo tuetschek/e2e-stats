@@ -107,6 +107,17 @@ def entropy(ngrams):
     return - sum([float(freq)/total_freq * math.log(float(freq)/total_freq, 2) for freq in ngrams.values()])
 
 
+def cond_entropy(joint, ctx):
+    """Conditional/next-word entropy (language model style)"""
+    total_joint = sum(joint.values())
+    total_ctx = sum(ctx.values())
+    # H(y|x) = - sum_{x,y} p(x,y) log_2 p(y|x)
+    # p(y|x) = p(x,y) / p(x)
+    return - sum([float(freq)/total_joint *
+                  math.log((float(freq)/total_joint) / (float(ctx[ngram[:-1]])/total_ctx), 2)
+                  for ngram, freq in joint.items()])
+
+
 def data_stats(mrs, refs, delex_slots, delex_output_file):
 
     stats = {}
@@ -117,7 +128,7 @@ def data_stats(mrs, refs, delex_slots, delex_output_file):
         if "\n" in text:
             common_header, rest = text.split("\n", 1)
             common_header = common_header.strip(':')
-            data = [["%s-%02d" % (common_header, num), it.strip()]  for num, it in enumerate(text.split("\n"), start=1)]
+            data = [["%s-%02d" % (common_header, num), it.strip()]  for num, it in enumerate(rest.split("\n"), start=1)]
         elif '  ' in text:
             data = [it.split(':', 1) for it in text.split('  ')]
             common_header = re.sub(' [^ ]*$', '', data[0][0])
@@ -170,19 +181,21 @@ def data_stats(mrs, refs, delex_slots, delex_output_file):
         sprnt(refs_type + 'Top unigrams:\n' +
               '\n'.join(['  %-15s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(unigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
-        sprnt(refs_type + 'unigram entropy: %.4f' % entropy(unigrams))
+        sprnt(refs_type + 'Entropy unigrams: %.4f' % entropy(unigrams))
         bigrams, uniq_bigrams = ngram_stats(refs, 2)
         sprnt(refs_type + 'Uniq bigrams: %d / %d = %.2f' % (uniq_bigrams, len(bigrams), uniq_bigrams / float(len(bigrams))))
         sprnt(refs_type + 'Top bigrams:\n' +
               '\n'.join(['  %-20s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(bigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
-        sprnt(refs_type + 'bigram entropy: %.4f' % entropy(bigrams))
+        sprnt(refs_type + 'Entropy bigrams: %.4f' % entropy(bigrams))
+        sprnt(refs_type + 'LM Entropy bigram: %.4f' % cond_entropy(bigrams, unigrams))
         trigrams, uniq_trigrams = ngram_stats(refs, 3)
         sprnt(refs_type + 'Uniq trigrams: %d / %d = %.2f' % (uniq_trigrams, len(trigrams), uniq_trigrams / float(len(trigrams))))
         sprnt(refs_type + 'Top trigrams:\n' +
               '\n'.join(['  %-25s -- %5d' % (' '.join(ngram), freq)
                          for ngram, freq in sorted(trigrams.items(), key=lambda x: x[1], reverse=True)[:25]]))
-        sprnt(refs_type + 'trigram entropy: %.4f' % entropy(trigrams))
+        sprnt(refs_type + 'Entropy trigrams: %.4f' % entropy(trigrams))
+        sprnt(refs_type + 'LM Entropy trigram: %.4f' % cond_entropy(trigrams, bigrams))
 
     return stats
 
