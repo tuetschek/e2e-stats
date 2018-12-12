@@ -11,10 +11,10 @@ These scripts compute various statistics used for the following datasets:
 
 To run the scripts, just clone this repository and run:
 ```
-./run_all.sh
+./run_dataset_stats.sh
 ```
 
-Be sure to **read the `run_all.sh` script beforehand and check that it doesn't do any harm** to your setup! 
+Be sure to **read the `run_dataset_stats.sh` script beforehand and check that it doesn't do any harm** to your setup! 
 It will install several required Python libraries into userspace by default, and it will download 
 several tools needed to compute the stats.
 
