@@ -1,10 +1,14 @@
 #!/bin/bash
 
+# set this to your e2e-metrics path!
+E2E_METRICS=/home/ondra/e2e-metrics
+
 set -e  # exit on error
 
-## assuming dataset stats script has already run and created
-## the necessary stuff
-#ls dlevel lca morphodita >/dev/null 
+# assuming dataset stats script has already run and created the necessary stuff
+ls dlevel lca morphodita >/dev/null 
+# checking whether the e2e metrics path is working
+ls $E2E_METRICS/measure_scores.py >/dev/null
 
 
 ## Download system outputs
@@ -42,7 +46,9 @@ set -e  # exit on error
 
 
 # BLEU etc. similarity
+
 cd sys_outputs
+# making the testset-all file multi-reference
 cat <<EOF | python
 import pandas as pd
 from tgen.data import DA
@@ -52,7 +58,9 @@ data = pd.read_csv('testset-all.tsv', encoding='UTF-8', sep="\t")
 mrs = [DA.parse_diligent_da(mr) for mr in data['MR']]
 with codecs.open('testset-all.delex.txt', 'r', 'UTF-8') as fh: 
     refs = fh.readlines()
-with codecs.open('testset-all_multiref.delex.txt', 'w', 'UTF-8') as fh:
+if len(refs) > len(mrs):
+    exit(0)  # don't do anything -- probably ran already
+with codecs.open('testset-all.delex.txt', 'w', 'UTF-8') as fh:
     last_mr = None
     for mr, ref in zip(mrs, refs):
         if last_mr and last_mr != mr:
@@ -60,4 +68,19 @@ with codecs.open('testset-all_multiref.delex.txt', 'w', 'UTF-8') as fh:
         fh.write(ref)
         last_mr = mr
 EOF
+
+# run e2e-metrics in a grid
+echo -e 'Sys1\tSys2\tBLEU\tNIST\tMETEOR\tROUGE-L\tCIDEr' > matrix-scores.tsv  # create header
+ls *.delex.txt | while read reffile; do 
+    ls *.delex.txt | while read sysfile; do 
+        if [[ "$sysfile" = "testset-all.delex.txt" ]]; then
+            continue  # the system file can't be testset-all
+        fi
+        echo -ne "$reffile\t" >> matrix-scores.tsv; 
+        python2 $E2E_METRICS/measure_scores.py -p -t "$reffile" "$sysfile" >> matrix-scores.tsv; 
+    done; 
+done
 cd ..
+
+# build the heatmaps
+./heatmaps.py sys_outputs/matrix-scores.tsv heatmap
